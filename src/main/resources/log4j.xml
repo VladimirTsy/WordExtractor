@@ -1,0 +1,28 @@
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration>
+    <appender name="roll-by-time-and-size" class="org.apache.log4j.rolling.RollingFileAppender">
+        <rollingPolicy class="org.apache.log4j.rolling.TimeBasedRollingPolicy">
+            <param name="ActiveFileName" value="log/WordExtractor.log" />
+            <param name="FileNamePattern" value="log/WordExtractor %d{dd-MM-yyyy}.%i.log.gz" />
+            <!--special placeholder %i will be replaced with the index of the rolled file.-->
+        </rollingPolicy>
+        <triggeringPolicy
+                class="org.apache.log4j.rolling.SizeBasedTriggeringPolicy">
+            <param name="MaxFileSize" value="100000000" />  <!--Сжимаем файл, если он больше 100MB-->
+        </triggeringPolicy>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss} %-5p - %m%n" />
+        </layout>
+    </appender>
+    <appender name="ConsoleAppender" class="org.apache.log4j.ConsoleAppender">
+        <param name="Target" value="System.out"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%r %-5p %c %x - %m%n" />
+        </layout>
+    </appender>
+    <root>
+        <priority value ="debug"></priority>
+        <appender-ref ref="roll-by-time-and-size" />
+        <appender-ref ref="ConsoleAppender"/>
+    </root>
+</log4j:configuration>
