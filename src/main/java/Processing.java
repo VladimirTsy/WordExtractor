@@ -19,10 +19,13 @@ public class Processing {
    public static String getTextFromCell(XWPFTableCell cell){
        String result = "";
        for(XWPFParagraph paragraph : cell.getParagraphs()){
-           result = result + (result.length() > 0 ? "<br/>" + paragraph.getText().replaceAll("[\\r\\n]+", "<br/>") : paragraph.getText().replaceAll("[\\r\\n]+", "<br/>") );
+
+
+           result = result + (result.length() > 0 ? "\\n" + paragraph.getText().replaceAll("[\\r\\n]+", "\\n") : paragraph.getText().replaceAll("[\\r\\n]+", "\\n") );
        }
        return result;
    }
+
 
    public static  String GetValidNameJob(String jobname){
        Pattern regex = Pattern.compile("^[^\\]}(),]*");
@@ -33,4 +36,6 @@ public class Processing {
 
        return jobname + " is invalid name";
    }
+
+
 }

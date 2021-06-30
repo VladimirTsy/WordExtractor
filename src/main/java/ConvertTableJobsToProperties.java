@@ -21,7 +21,11 @@ public class ConvertTableJobsToProperties {
 
         StringBuilder sb = new StringBuilder();
 
-        FileInputStream fis = new FileInputStream("C:\\Users\\мвидео\\Documents\\_БИ Телеком\\48334\\VIP - OP Run Book - Vimpelcom.docx");
+        String pathToSourceFile = "C:\\Users\\мвидео\\Documents\\_БИ Телеком\\DB Entities\\AR and Collection\\Letters\\";
+        String fileName = "PRODN-104604-Letter Entities - V1.0.docx";
+        String fileNameResult = fileName.substring(0, fileName.length() -4) + "vmpref.properties";
+
+        FileInputStream fis = new FileInputStream(pathToSourceFile  + fileName);
 
         ArrayList<String> allJobName = new ArrayList<>();
 
@@ -112,7 +116,7 @@ public class ConvertTableJobsToProperties {
                                   .collect(Collectors.joining(",")));
         sb.append("\n");
 
-        Write.writeToFile(sb);
+        Write.writeToFile(sb, pathToSourceFile + fileNameResult);
         LOGGER.log(Level.INFO, "Обработано и записано: " + countTableRecord + " таблиц");
 
     }

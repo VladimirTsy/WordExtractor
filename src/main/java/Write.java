@@ -4,8 +4,8 @@ import java.io.IOException;
 
 public class Write {
 
-    public static void writeToFile(StringBuilder sb) throws IOException {
-        FileWriter fw = new FileWriter("C:\\Users\\мвидео\\Documents\\_БИ Телеком\\WordExtractor\\vmpref.properties");
+    public static void writeToFile(StringBuilder sb, String pathToWrite) throws IOException {
+        FileWriter fw = new FileWriter(pathToWrite);
         BufferedWriter bw = new BufferedWriter(fw);
         try {
             bw.write(sb.toString());
