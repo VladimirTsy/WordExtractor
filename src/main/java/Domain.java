@@ -13,7 +13,7 @@ public class Domain {
     public static final Logger LOGGER = Logger.getLogger(Domain.class);
 
 
-    public static String candidateTitle = "";
+   // public static String candidateTitle = "";
     public static String currentTitle = "";
     public static boolean hasAttributeDescriptions = false;
     public static String description = "";
@@ -21,10 +21,10 @@ public class Domain {
 
 
     public static void main(String[] args) throws IOException, InvalidFormatException {
-
+        int count = 0;
         StringBuilder sb = new StringBuilder();
-        String pathToSourceFile = "C:\\Users\\мвидео\\Documents\\_БИ Телеком\\DB Entities\\AR and Collection\\";
-        String fileName = "Reference Tables - Market Area.docx";
+        String pathToSourceFile = "C:\\Users\\мвидео\\Documents\\_БИ Телеком\\DB Entities\\Security\\";
+        String fileName = "PRODN-119714-Security Area Reference Tables.docx";
         String fileNameResult = fileName.substring(0, fileName.length() - 4) + "vmpref.properties";
 
         FileInputStream fis = new FileInputStream(pathToSourceFile + fileName); // Customer Area Entities.docx");   // CSM - Reference Tables.docx"); // AR Area Entities.docx");
@@ -53,19 +53,25 @@ public class Domain {
                 XWPFParagraph paragraph = (XWPFParagraph) elem;
 
                 // проверяем, что заголовок яв-ся заголовком Верхнего уровня
-                if (Pattern.compile("^(\\s{0,10}\\d+\\.)(?!\\s{0,3}\\d)")
-                        .matcher(paragraph.getText()).find() &&
+                if (Pattern.compile("^(\\s{0,10}\\d+\\.)(?!\\s{0,3}\\d)") // 1.
+                //if (Pattern.compile("^\\d+(\\.\\d+\\.*\\s{0,10}[A-Za-z _()]+\\d+)?$") // 1.1.
+                        .matcher(paragraph.getText().replaceAll("\t","")).find() &&
                         !paragraph.getText().toLowerCase(Locale.ROOT).contains("introduction") &&
-                        !paragraph.getText().toLowerCase(Locale.ROOT).trim().replaceAll("\\s","").startsWith("purposeandscope"))
+                        !paragraph.getText().toLowerCase(Locale.ROOT).replaceAll("\\s","").contains("relateddocuments") &&
+                        !paragraph.getText().toLowerCase(Locale.ROOT).trim().replaceAll("\\s","").startsWith("purposeandscope")
+
+                  )
                 {
 
                     // добавляем заголовок верхнего уровня в коллекцию
                     entities.add(paragraph.getText().toLowerCase(Locale.ROOT)
                             .trim().replaceAll("\\s", ""));
+
+
                 }
 
 
-                if (paragraph.getText().toLowerCase(Locale.ROOT).trim().startsWith("introduction")
+                if (paragraph.getText().toLowerCase(Locale.ROOT).trim().replaceAll("\t","").startsWith("introduction")
                         || paragraph.getText().toLowerCase(Locale.ROOT).trim().replaceAll("\\s","").startsWith("purposeandscope"))
                 {
                     break;
@@ -91,8 +97,9 @@ public class Domain {
                 // Обработка исключительной ситуациии, Когда для заголовка не найдена таблица
                 if (key.length() > 0) {
 
+
                     ArrayList<String> list = (ArrayList<String>) entities.stream()
-                            .filter(x -> x.contains(key))
+                            .filter(x -> x.contains(key) && Double.valueOf(x.length()) / Double.valueOf(key.length()) < 2.5)
                             .collect(Collectors.toList());
                     // Если флаги не были сброшены от предыдущего заголовка,
                     // значит для предыдущего заголовка не была найдена
@@ -115,19 +122,22 @@ public class Domain {
                 // устанавливаем текущее имя заголовка-таблицы (сущности)
                 if (key.length() > 0 && currentTitle.length() == 0 && !hasAttributeDescriptions) {
 
+                    if(key.toUpperCase(Locale.ROOT).contains("USERS")){
+                        System.out.println("stop");
+                    }
+
                     ArrayList<String> list = (ArrayList<String>) entities.stream()
-                            .filter(x -> x.contains(key))
+                            .filter(x -> x.contains(key) && Double.valueOf(x.length()) / Double.valueOf(key.length()) < 2.5)
                             .collect(Collectors.toList());
 
                     if (list.size() > 0) {
                         currentTitle = paragraph.getText();
+                        //if(key.contains("casequeuerelation"))
+                        //System.out.println("stop");
 
-                        if (currentTitle.contains("SUBSCRIBER_HISTORY")) {
-                            System.out.println("stop");
-                        }
                     }
 
-                    // Обработка исключительной ситуации,
+              /*      // Обработка исключительной ситуации,
                     // когда заголовок забыли включить в Contents
                     // при такой длине будем предполагать, что это пропущенный заголовок
                     if (key.length() > 2 && key.length() < 51 && candidateTitle.length() == 0) {
@@ -145,10 +155,10 @@ public class Domain {
                             descriptionEnd = false;
 
                         }
-                    }
+                    }*/
 
                 }  // ищем параграф, в котором содержится информация с нужной таблицей
-                else if (key.contains("attributedescription")) {
+                else if (key.contains("attributedescription") || paragraph.getText().replaceAll("\\t", "").startsWith("Attributes")) {
                     hasAttributeDescriptions = true;
                 }
 
@@ -157,18 +167,30 @@ public class Domain {
                  *  */
                 String validText = paragraph.getText().replaceAll("\\s", "").toLowerCase(Locale.ROOT);
 
+
                 if (currentTitle.length() > 0 &&
-                        (!validText.contains("entitylifecycle") &&
+                        (!validText.contains("lifecycle") &&
                                 !validText.contains("relationships") &&
                                 !validText.contains("attributedescriptions") &&
                                 !validText.contains(currentTitle.replaceAll("\\s", "").toLowerCase(Locale.ROOT))
                         ) && !descriptionEnd
                 ) {
-                    description = description + (description.length() > 0 ? "\\n" + paragraph.getText() : paragraph.getText());
+
+
+                    // что бы в описание не писалось слово attributedescription или Relation
+                    if (!paragraph.getText().replaceAll("\\s", "").replaceAll("\t", "")
+                            .toLowerCase(Locale.ROOT).startsWith("attributedescription") &&
+                        !paragraph.getText().replaceAll("\\t\\n", "").startsWith("Relation")
+                    )
+                    {
+                        description = description + (description.length() > 0 ? "\\n" + paragraph.getText() : paragraph.getText());
+                    }
+
+
 
                     // устанавливаем флаг, о том что description собран
-                } else if (validText.contains("entitylifecycle") || validText.contains("relationships") ||
-                        validText.contains("attributedescriptions")) {
+                } else if (validText.contains("lifecycle") || validText.contains("relationships") ||
+                        validText.contains("attributedescriptions") || paragraph.getText().replaceAll("\\t\\n", "").startsWith("Relation")) {
                     descriptionEnd = true;
                 }
 
@@ -200,7 +222,7 @@ public class Domain {
                         String c = row.getCell(i).getText().toLowerCase(Locale.ROOT)
                                 .trim().replaceAll("\\s", "").replaceAll("\\&", "");
 
-                        if ((c.contains("field") || c.contains("attribute") || c.contains("columnname")) && !findfild) {
+                        if ((c.contains("field") || c.contains("attribute") || c.contains("columnname") || c.contains("name")) && !findfild) {
                             idxAttribute = i;
                             findfild = true;
                         } else if (c.contains("description")) {
@@ -223,7 +245,7 @@ public class Domain {
                         // скидываем флаги в исходное состояние
                         currentTitle = "";
                         hasAttributeDescriptions = false;
-                        candidateTitle = "";
+                        //candidateTitle = "";
                         description = "";
                         descriptionEnd = false;
 
@@ -234,46 +256,58 @@ public class Domain {
                                 + description.replaceAll("<", "&lt;").replaceAll(">", "&gt;"));
                         sb.append("\n");
 
+                         if(table.getRows().size() > 0)
+                             count++;
+
                         // записываем информацию из таблицы
                         for (int j = 1; j < table.getRows().size(); j++) {
                             XWPFTableRow r = table.getRow(j);
 
 
+
+
                             if (r.getTableCells().stream().filter(x->x.getText()
                                      .toLowerCase(Locale.ROOT).replaceAll("\\s","").contains("g/lbreakdownfields")).count() == 0 &&
                                     r.getTableCells().stream().filter(x->x.getText()
-                                            .toLowerCase(Locale.ROOT).replaceAll("\\s","").contains("breakdownfield")).count() == 0) {
-
-                                sb.append(currentTitle.replace("\r", "").replaceAll("[\\n\\t ]", "").toUpperCase(Locale.ROOT) + "."
-                                        + r.getCell(idxAttribute).getText().replace("\n", "").replaceAll("\r", "").replaceAll("[\\n\\t ]", "").trim().replaceAll("\u00A0", "")
-                                        + "=" + (idxDescription >= 0 ? Processing.getTextFromCell(r.getCell(idxDescription)).replaceAll("[\\r\\n]+", "\\n").replaceAll("<", "&lt;").replaceAll(">", "&gt;") : ""));
-
-                                sb.append("\n");
-
-                                if (idxLifeCycle > 0) {
-                                    sb.append(currentTitle.replace("\r", "").replaceAll("[\\n\\t ]", "").toUpperCase(Locale.ROOT) + "."
-                                            + r.getCell(idxAttribute).getText().replaceAll("\n", "").replaceAll("\r", "").replaceAll("[\\n\\t ]", "") + "."
-                                            + "LifeCycle=" + r.getCell(idxLifeCycle).getText().replaceAll("<", "&lt;").replaceAll(">", "&gt;"));
-                                    sb.append("\n");
-                                }
-
-                                if (idxValuesEdits > 0) {
-                                    sb.append(currentTitle.replace("\r", "").replaceAll("[\\n\\t ]", "").toUpperCase(Locale.ROOT) + "."
-                                            + r.getCell(idxAttribute).getText().replaceAll("\n", "").replaceAll("\r", "").replaceAll("[\\n\\t ]", "") + "."
-                                            + "ValuesEdits=" + Processing.getTextFromCell(r.getCell(idxValuesEdits)).replaceAll("\uF0B7", "").replaceAll("\t", "").replaceAll("U+F0BF", "").replaceAll("[\\r\\n]+", "\\n").replaceAll("<", "&lt;").replaceAll(">", "&gt;"));
-                                    sb.append("\n");
-                                }
+                                            .toLowerCase(Locale.ROOT).replaceAll("\\s","").contains("breakdownfield")).count() == 0)
+                            {
 
 
-                                if (idxValidValues > 0) {
-
+                                    if(r.getCell(idxDescription).getText().replaceAll("\\s","").contains("DiscountFeatureCode")){
+                                        System.out.println("stop");
+                                    }
 
                                     sb.append(currentTitle.replace("\r", "").replaceAll("[\\n\\t ]", "").toUpperCase(Locale.ROOT) + "."
-                                            + r.getCell(idxAttribute).getText().replaceAll("\n", "").replaceAll("\r", "").replaceAll("[\\n\\t ]", "").replaceAll("\\r\\n|\\r|\\n", " ") + "."
-                                            + "ValidValues=" + r.getCell(idxValidValues).getText().replaceAll("\t", "").replaceAll("\r", "\\n").replaceAll("[\\r\\n]+", "\\n").replaceAll("<", "&lt;").replaceAll(">", "&gt;"));
+                                            + r.getCell(idxAttribute).getText().replace("\n", "").replaceAll("\r", "").replaceAll("[\\n\\t ]", "").trim().replaceAll("\u00A0", "")
+                                            + "=" + (idxDescription >= 0 ? Processing.getTextFromCell(r.getCell(idxDescription)).replaceAll("[\\r\\n]+", "\\n").replaceAll("<", "&lt;").replaceAll(">", "&gt;") : ""));
+
                                     sb.append("\n");
 
-                                }
+                                    if (idxLifeCycle > 0) {
+                                        sb.append(currentTitle.replace("\r", "").replaceAll("[\\n\\t ]", "").toUpperCase(Locale.ROOT) + "."
+                                                + r.getCell(idxAttribute).getText().replaceAll("\n", "").replaceAll("\r", "").replaceAll("[\\n\\t ]", "") + "."
+                                                + "LifeCycle=" + r.getCell(idxLifeCycle).getText().replaceAll("\n", "").replaceAll("<", "&lt;").replaceAll(">", "&gt;"));
+                                        sb.append("\n");
+                                    }
+
+                                    if (idxValuesEdits > 0) {
+                                        sb.append(currentTitle.replace("\r", "").replaceAll("[\\n\\t ]", "").toUpperCase(Locale.ROOT) + "."
+                                                + r.getCell(idxAttribute).getText().replaceAll("\n", "").replaceAll("\r", "").replaceAll("[\\n\\t ]", "") + "."
+                                                + "ValuesEdits=" + Processing.getTextFromCell(r.getCell(idxValuesEdits)).replaceAll("\uF0B7", "").replaceAll("\t", "").replaceAll("U+F0BF", "").replaceAll("[\\r\\n]+", "\\n").replaceAll("<", "&lt;").replaceAll(">", "&gt;"));
+                                        sb.append("\n");
+                                    }
+
+
+                                    if (idxValidValues > 0) {
+
+
+                                        sb.append(currentTitle.replace("\r", "").replaceAll("[\\n\\t ]", "").toUpperCase(Locale.ROOT) + "."
+                                                + r.getCell(idxAttribute).getText().replaceAll("\n", "").replaceAll("\r", "").replaceAll("[\\n\\t ]", "").replaceAll("\\r\\n|\\r|\\n", " ") + "."
+                                                + "ValidValues=" + r.getCell(idxValidValues).getText().replaceAll("\t", "").replaceAll("\r", "\\n").replaceAll("[\\r\\n]+", "\\n").replaceAll("<", "&lt;").replaceAll(">", "&gt;"));
+                                        sb.append("\n");
+
+                                    }
+
                             }
 
                             //INVOICE_ITEM.BAN.LifeCycle=Set when the invoice item is created
@@ -283,7 +317,7 @@ public class Domain {
                         // таблица записана, сбрасываем флаги в исходное состояние
                         currentTitle = "";
                         hasAttributeDescriptions = false;
-                        candidateTitle = "";
+                       // candidateTitle = "";
                         description = "";
                         descriptionEnd = false;
 
@@ -294,6 +328,8 @@ public class Domain {
                 }
             }
         }
+
+        LOGGER.log(Level.INFO,  "Было обработано: " + count + " таблиц");
 
         Write.writeToFile(sb, pathToSourceFile + fileNameResult);
     }

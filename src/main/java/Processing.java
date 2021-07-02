@@ -21,7 +21,7 @@ public class Processing {
        for(XWPFParagraph paragraph : cell.getParagraphs()){
 
 
-           result = result + (result.length() > 0 ? "\\n" + paragraph.getText().replaceAll("[\\r\\n]+", "\\n") : paragraph.getText().replaceAll("[\\r\\n]+", "\\n") );
+           result = result + (result.length() > 0 ? ("\\n" + paragraph.getText()).replaceAll("[\\r\\n]+", "\n") : paragraph.getText().replaceAll("[\\r\\n]+", "\n") );
        }
        return result;
    }

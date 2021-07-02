@@ -83,5 +83,7 @@ public class StringSimilarity {
         printSimilarity("The quick fox jumped", "The fox jumped");
         printSimilarity("The quick fox jumped", "The fox");
         printSimilarity("kitten", "sitting");
+        printSimilarity("BAN Bill Synchronies (BAN_BILL_SYNC)", "BAN");
+        printSimilarity("BAN Bill Synchronies (BAN_BILL_SYNC)", "BAN_BILL_SYNC");
     }
 }
